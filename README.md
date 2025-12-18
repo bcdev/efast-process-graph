@@ -11,7 +11,7 @@ The creators of the algorithm, DHI-GRAS, provide a [Python implementation](https
 
 ## EFAST
 
-EFATS is a method to create time-series with a fine resolution in space and time from a fine spatial but coarse temporal resolution source
+EFAST is a method to create time-series with a fine resolution in space and time from a fine spatial but coarse temporal resolution source
 (Sentinel-2) and a coarse temporal but fine spatial resolution source (Sentinel-3).
 It computes a user-defined time series, which can have fine temporal resolution, at fine spatial resolution (10m in the case of the UDP).
 
