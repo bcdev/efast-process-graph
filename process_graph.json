@@ -323,28 +323,6 @@
                 "dimension": "t"
             }
         },
-        "arrayfilter1": {
-            "process_id": "array_filter",
-            "arguments": {
-                "condition": {
-                    "process_graph": {
-                        "neq1": {
-                            "process_id": "neq",
-                            "arguments": {
-                                "x": {
-                                    "from_parameter": "x"
-                                },
-                                "y": "CLOUD_flags"
-                            },
-                            "result": true
-                        }
-                    }
-                },
-                "data": {
-                    "from_parameter": "s3_data_bands"
-                }
-            }
-        },
         "loadcollection3": {
             "process_id": "load_collection",
             "arguments": {
@@ -397,22 +375,34 @@
                 }
             }
         },
-        "filterbands1": {
-            "process_id": "filter_bands",
+        "filterlabels1": {
+            "process_id": "filter_labels",
             "arguments": {
-                "bands": {
-                    "from_node": "arrayfilter1"
+                "condition": {
+                    "process_graph": {
+                        "neq2": {
+                            "process_id": "neq",
+                            "arguments": {
+                                "x": {
+                                    "from_parameter": "value"
+                                },
+                                "y": "CLOUD_flags"
+                            },
+                            "result": true
+                        }
+                    }
                 },
                 "data": {
                     "from_node": "apply5"
-                }
+                },
+                "dimension": "bands"
             }
         },
         "reducedimension2": {
             "process_id": "reduce_dimension",
             "arguments": {
                 "data": {
-                    "from_node": "filterbands1"
+                    "from_node": "filterlabels1"
                 },
                 "dimension": "bands",
                 "reducer": {
@@ -572,7 +562,7 @@
             "process_id": "merge_cubes",
             "arguments": {
                 "cube1": {
-                    "from_node": "filterbands1"
+                    "from_node": "filterlabels1"
                 },
                 "cube2": {
                     "from_node": "adddimension2"
@@ -618,15 +608,27 @@
                 }
             }
         },
-        "filterbands2": {
-            "process_id": "filter_bands",
+        "filterlabels2": {
+            "process_id": "filter_labels",
             "arguments": {
-                "bands": {
-                    "from_node": "arrayfilter1"
+                "condition": {
+                    "process_graph": {
+                        "neq1": {
+                            "process_id": "neq",
+                            "arguments": {
+                                "x": {
+                                    "from_parameter": "value"
+                                },
+                                "y": "distance_score"
+                            },
+                            "result": true
+                        }
+                    }
                 },
                 "data": {
                     "from_node": "applydimension1"
-                }
+                },
+                "dimension": "bands"
             }
         },
         "applykernel1": {
@@ -634,7 +636,7 @@
             "arguments": {
                 "border": 0,
                 "data": {
-                    "from_node": "filterbands2"
+                    "from_node": "filterlabels2"
                 },
                 "factor": 1.0,
                 "kernel": [
@@ -731,7 +733,9 @@
                     "interval_days": {
                         "from_parameter": "interval_days"
                     },
-                    "sigma_doy": 20
+                    "sigma_doy": {
+                        "from_parameter": "temporal_score_stddev"
+                    }
                 },
                 "data": {
                     "from_node": "mergecubes3"
@@ -906,6 +910,15 @@
             }
         },
         {
+            "name": "temporal_score_stddev",
+            "description": "Standard deviation (in days) of the gaussian window used to temporally weigh observations in the fusion procedure. This is the smoothing parameter 's' described in Section 2.5 of [the paper](https://doi.org/10.3390/rs16111833).A larger number means that observations further away from the target date receive a stronger weight and that adjacent time steps in the output are more similar.",
+            "schema": {
+                "type": "number"
+            },
+            "default": 20,
+            "optional": true
+        },
+        {
             "name": "s2_data_bands",
             "description": "Sentinel-2 L2A bands (names follow the SENTINEL2_L2A collection) used in the fusion procedure. The order should match the corresponding s3_data_bands and fused_band_names parameters.If the NDVI should be computed (parameter output_ndvi is set to True), s2_data_bands must be set to [B04, B8A].",
             "schema": {
@@ -924,18 +937,25 @@
         },
         {
             "name": "s3_data_bands",
-            "description": "Sentinel-3 SYN L2 SYN bands (names follow the SENTINEL3_SYN_L2_SYN collection) used in the fusion procedure. The order of s3_data_bands must match the order of s2_data_bands, so that bands with closely matching center wavelengths are fused. If the NDVI should be computed (parameter output_ndvi is set to True), s3_data_bands must be set to [Syn_Oa08_reflectance, Syn_Oa17_reflectance].",
+            "description": [
+                "Sentinel-3 SYN L2 SYN bands (names follow the SENTINEL3_SYN_L2_SYN collection) used in the fusion procedure. The order of s3_data_bands (ignoring CLOUD_flags) must match the order of s2_data_bands, so that bands with closely matching center wavelengths are fused. The CLOUD_flags band must be included, however its position in the list is not important.",
+                "If the NDVI should be computed (parameter output_ndvi is set to True), s3_data_bands must be set to [Syn_Oa08_reflectance, Syn_Oa17_reflectance, CLOUD_flags]."
+            ],
             "schema": {
                 "type": "array",
                 "items": {
                     "type": "string"
+                },
+                "contains": {
+                    "const": "CLOUD_flags"
                 }
             },
             "default": [
                 "Syn_Oa04_reflectance",
                 "Syn_Oa06_reflectance",
                 "Syn_Oa08_reflectance",
-                "Syn_Oa17_reflectance"
+                "Syn_Oa17_reflectance",
+                "CLOUD_flags"
             ],
             "optional": true
         },
