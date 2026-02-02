@@ -44,6 +44,8 @@ cube = connection.datacube_from_process(
     },
     # Interval of the output time series
     interval_days=5,
+    # Smoothing parameter controlling the amount of temporal context considered in fusion (standard deviation of gaussian window)
+    temporal_score_stddev=20,
     # Output NDVI (if False, output a cube with bands `s2_data_bands`)
     output_ndvi=True,
 ```
