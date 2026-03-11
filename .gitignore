@@ -1,2 +1,5 @@
 notebooks/outputs
-notebooks/.ipynb_checkpoints
+notebooks/outputs_lite
+notebooks/.virtual_documents
+notebooks/**/.ipynb_checkpoints
+**/*.db
